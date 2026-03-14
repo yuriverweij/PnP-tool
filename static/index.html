@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PnP Tool - add bleed</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header>
+    <h1>PnP Tool - add bleed</h1>
+    <p class="subtitle">Add bleed to card images for clean duplex printing</p>
+    <button type="button" id="btn-reset" class="reset-btn">New session</button>
+  </header>
+
+  <main>
+    <!-- ── Step 1: Upload fronts ── -->
+    <section class="step" id="step-fronts">
+      <h2><span class="step-num">1</span> Upload front card images</h2>
+
+      <div class="drop-zone" id="drop-fronts">
+        <input type="file" id="file-fronts" accept="image/*" multiple hidden>
+        <div class="drop-inner">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M12 16V4m0 0L8 8m4-4 4 4M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2"/>
+          </svg>
+          <p>Drop images here or <button type="button" class="link-btn" id="browse-fronts">browse</button></p>
+          <p class="hint">PNG or JPG · all cards the same size</p>
+        </div>
+      </div>
+
+      <div id="fronts-list" class="card-list hidden"></div>
+
+      <!-- Card size -->
+      <div id="size-section" class="hidden">
+        <div class="size-row">
+          <div class="field-group">
+            <label for="preset-select">Card size</label>
+            <select id="preset-select">
+              <option value="poker">Poker — 63 × 88 mm</option>
+              <option value="tarot">Tarot — 70 × 120 mm</option>
+              <option value="mini">Mini American — 41 × 63 mm</option>
+              <option value="custom">Custom…</option>
+            </select>
+          </div>
+          <div class="field-group custom-size hidden" id="custom-w-group">
+            <label for="card-w">Width (mm)</label>
+            <input type="number" id="card-w" value="63" min="10" max="200" step="0.5">
+          </div>
+          <div class="field-group custom-size hidden" id="custom-h-group">
+            <label for="card-h">Height (mm)</label>
+            <input type="number" id="card-h" value="88" min="10" max="300" step="0.5">
+          </div>
+        </div>
+        <p id="size-hint" class="hint"></p>
+      </div>
+    </section>
+
+    <!-- ── Step 2: Back assignment ── -->
+    <section class="step hidden" id="step-backs">
+      <h2><span class="step-num">2</span> Assign backs</h2>
+
+      <div class="radio-group">
+        <label class="radio-label">
+          <input type="radio" name="back-mode" value="single" checked>
+          <span>Same back for all cards</span>
+        </label>
+        <label class="radio-label">
+          <input type="radio" name="back-mode" value="individual">
+          <span>Individual back per card</span>
+        </label>
+        <label class="radio-label">
+          <input type="radio" name="back-mode" value="default_override">
+          <span>Default back + override per card</span>
+        </label>
+      </div>
+
+      <!-- Mode: single -->
+      <div id="mode-single" class="back-mode-panel">
+        <div class="drop-zone small" id="drop-single-back">
+          <input type="file" id="file-single-back" accept="image/*" hidden>
+          <div class="drop-inner">
+            <p>Drop one back image or <button type="button" class="link-btn" id="browse-single-back">browse</button></p>
+          </div>
+        </div>
+        <div id="single-back-preview" class="single-preview hidden">
+          <img id="single-back-img" src="" alt="back">
+          <button type="button" class="link-btn remove-btn" id="remove-single-back">Remove</button>
+        </div>
+      </div>
+
+      <!-- Mode: individual -->
+      <div id="mode-individual" class="back-mode-panel hidden">
+        <div class="drop-zone small" id="drop-multi-back">
+          <input type="file" id="file-multi-back" accept="image/*" multiple hidden>
+          <div class="drop-inner">
+            <p>Drop back images (same order as fronts) or <button type="button" class="link-btn" id="browse-multi-back">browse</button></p>
+          </div>
+        </div>
+        <div id="backs-list" class="card-list hidden"></div>
+      </div>
+
+      <!-- Mode: default + override -->
+      <div id="mode-override" class="back-mode-panel hidden">
+        <div class="drop-zone small" id="drop-default-back">
+          <input type="file" id="file-default-back" accept="image/*" hidden>
+          <div class="drop-inner">
+            <p>Drop default back image or <button type="button" class="link-btn" id="browse-default-back">browse</button></p>
+          </div>
+        </div>
+        <div id="default-back-preview" class="single-preview hidden">
+          <img id="default-back-img" src="" alt="default back">
+          <button type="button" class="link-btn remove-btn" id="remove-default-back">Remove</button>
+        </div>
+        <div id="override-list" class="override-table hidden"></div>
+      </div>
+    </section>
+
+    <!-- ── Step 3: Output settings ── -->
+    <section class="step hidden" id="step-output">
+      <h2><span class="step-num">3</span> Output settings</h2>
+
+      <div class="settings-row">
+        <div class="field-group">
+          <label for="page-size">Output page</label>
+          <select id="page-size">
+            <option value="A4" selected>A4 — 210 × 297 mm</option>
+            <option value="Letter">Letter — 216 × 279 mm</option>
+            <option value="A3">A3 — 297 × 420 mm</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label for="flip-dir">Duplex flip</label>
+          <select id="flip-dir">
+            <option value="horizontal" selected>Horizontal (flip left edge)</option>
+            <option value="vertical">Vertical (flip top edge)</option>
+          </select>
+        </div>
+      </div>
+
+      <details class="advanced">
+        <summary>Advanced</summary>
+        <div class="settings-row">
+          <div class="field-group">
+            <label for="bleed-mm">Bleed (mm)</label>
+            <input type="number" id="bleed-mm" value="3" min="0" max="10" step="0.5">
+          </div>
+          <div class="field-group">
+            <label for="source-mm">Source strip (mm)</label>
+            <input type="number" id="source-mm" value="1" min="0.1" max="5" step="0.1">
+          </div>
+          <div class="field-group">
+            <label for="margin-mm">Page margin (mm)</label>
+            <input type="number" id="margin-mm" value="5" min="0" max="30" step="0.5">
+          </div>
+          <div class="field-group">
+            <label for="jpeg-quality">Image quality (1–95)</label>
+            <input type="number" id="jpeg-quality" value="95" min="1" max="95" step="1">
+          </div>
+        </div>
+        <div class="settings-row">
+          <div class="field-group">
+            <label>Cut marks</label>
+            <label class="radio-label"><input type="checkbox" id="cut-marks-fronts" checked> Fronts</label>
+            <label class="radio-label"><input type="checkbox" id="cut-marks-backs" checked> Backs</label>
+          </div>
+          <div class="field-group">
+            <label for="cut-mark-length">Mark length (mm)</label>
+            <input type="number" id="cut-mark-length" value="3" min="0.5" max="10" step="0.5">
+          </div>
+          <div class="field-group">
+            <label for="cut-mark-thickness">Mark thickness (mm)</label>
+            <input type="number" id="cut-mark-thickness" value="0.2" min="0.05" max="1" step="0.05">
+          </div>
+        </div>
+      </details>
+
+      <div class="grid-info" id="grid-info"></div>
+
+      <button type="button" id="btn-process" class="primary-btn" disabled>
+        Process &amp; Download PDF
+      </button>
+
+      <div id="status-area" class="hidden">
+        <div class="spinner" id="spinner"></div>
+        <p id="status-msg"></p>
+      </div>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
