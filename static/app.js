@@ -260,6 +260,7 @@ function onBackModeChange() {
   $('mode-individual').classList.toggle('hidden', mode !== 'individual');
   $('mode-override').classList.toggle('hidden', mode !== 'default_override');
   updateProcessBtn();
+  updateGridInfo();
 }
 
 // ── Single back ──
@@ -390,6 +391,7 @@ function updateProcessBtn() {
   if (mode === 'single')           ready = ready && !!state.singleBackFile;
   if (mode === 'individual')       ready = ready && state.multiBackFiles.length > 0;
   if (mode === 'default_override') ready = ready && !!state.defaultBackFile;
+  // mode === 'none' requires only fronts, already handled by the base check
 
   $('btn-process').disabled = !ready;
 }

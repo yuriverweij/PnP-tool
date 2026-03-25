@@ -9,6 +9,7 @@ from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from PIL import Image, ImageOps
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from processing.bleed import add_bleed, trim_card
 from processing.pdf_writer import PAGE_SIZES_MM, assemble_pdf, compute_grid
@@ -17,6 +18,17 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="PnP Tool - add bleed")
+
+
+class NoCacheStaticMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        response = await call_next(request)
+        if request.url.path.startswith("/static/"):
+            response.headers["Cache-Control"] = "no-store"
+        return response
+
+
+app.add_middleware(NoCacheStaticMiddleware)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 DPI = 300
@@ -277,6 +289,9 @@ def process(
                     ) from exc
             else:
                 back_images.append(default_back_img)
+    elif back_mode == "none":
+        back_images = [None] * len(front_images)
+
     else:
         raise HTTPException(status_code=422, detail=f"Unknown back_mode: {back_mode}")
 
@@ -356,4 +371,4 @@ def process(
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run("app:app", host="127.0.0.1", port=8000, reload=False)
+    uvicorn.run("app:app", host="127.0.0.1", port=8000, reload=True)

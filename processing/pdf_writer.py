@@ -185,21 +185,22 @@ def assemble_pdf(
                     bleed_pts, mark_len_pts, mark_width_pts,
                 )
 
-        # --- Back page ---
-        mirrored_backs = _mirror_back_page(chunk_backs, rows, cols, flip_direction)
-        back_page = doc.new_page(width=pw_pts, height=ph_pts)
-        for idx, img in enumerate(mirrored_backs):
-            if img is None:
-                continue
-            row, col = divmod(idx, cols)
-            x0 = x_start + col * card_w_pts
-            y0 = y_start + row * card_h_pts
-            rect = fitz.Rect(x0, y0, x0 + card_w_pts, y0 + card_h_pts)
-            back_page.insert_image(rect, stream=_image_to_jpeg_bytes(img, jpeg_quality))
-            if cut_marks_backs and bleed_pts > 0:
-                _draw_cut_marks(
-                    back_page, x0, y0, card_w_pts, card_h_pts,
-                    bleed_pts, mark_len_pts, mark_width_pts,
-                )
+        # --- Back page (skipped when no backs are provided) ---
+        if any(b is not None for b in chunk_backs):
+            mirrored_backs = _mirror_back_page(chunk_backs, rows, cols, flip_direction)
+            back_page = doc.new_page(width=pw_pts, height=ph_pts)
+            for idx, img in enumerate(mirrored_backs):
+                if img is None:
+                    continue
+                row, col = divmod(idx, cols)
+                x0 = x_start + col * card_w_pts
+                y0 = y_start + row * card_h_pts
+                rect = fitz.Rect(x0, y0, x0 + card_w_pts, y0 + card_h_pts)
+                back_page.insert_image(rect, stream=_image_to_jpeg_bytes(img, jpeg_quality))
+                if cut_marks_backs and bleed_pts > 0:
+                    _draw_cut_marks(
+                        back_page, x0, y0, card_w_pts, card_h_pts,
+                        bleed_pts, mark_len_pts, mark_width_pts,
+                    )
 
     return doc.tobytes()
