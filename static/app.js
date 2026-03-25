@@ -449,6 +449,7 @@ async function onProcess() {
 
   const bleedMm         = parseFloat($('bleed-mm').value)          || 3;
   const sourceMm        = parseFloat($('source-mm').value)         || 1;
+  const trimMm          = parseFloat($('trim-mm').value)           || 0;
   const marginMm        = parseFloat($('margin-mm').value)         || 5;
   const pageSize        = $('page-size').value;
   const flipDir         = $('flip-dir').value;
@@ -471,6 +472,7 @@ async function onProcess() {
   fd.append('output_margin_mm',  marginMm);
   fd.append('bleed_mm',          bleedMm);
   fd.append('source_mm',         sourceMm);
+  fd.append('trim_mm',           trimMm);
   fd.append('flip_direction',       flipDir);
   fd.append('jpeg_quality',          jpegQuality);
   fd.append('cut_marks_fronts',     cutMarksFronts);

@@ -22,6 +22,20 @@ def add_bleed(
     return _add_bleed_px(card, bleed_px, source_px)
 
 
+def trim_card(card: Image.Image, trim_mm: float, dpi: int = 300) -> Image.Image:
+    """Crop trim_mm from each edge, then resize back to the original dimensions.
+
+    Removes colored border artifacts before bleed is sourced from the edge.
+    """
+    if trim_mm <= 0:
+        return card.copy()
+    trim_px = _mm_to_px(trim_mm, dpi)
+    trim_px = min(trim_px, card.width // 2 - 1, card.height // 2 - 1)
+    w, h = card.size
+    cropped = card.crop((trim_px, trim_px, w - trim_px, h - trim_px))
+    return cropped.resize((w, h), Image.LANCZOS)
+
+
 def _mm_to_px(mm: float, dpi: int) -> int:
     return max(1, round(mm * dpi / 25.4))
 
