@@ -89,6 +89,7 @@ Upload one default back image. Then use the card list to override specific cards
 |---|---|---|
 | Bleed | 3 mm | How much bleed to add on each side of the card |
 | Source strip | 1 mm | How wide a strip of the card edge is used as the bleed source |
+| Pre-bleed trim | 0 mm | Crops this much from each edge of the card *before* bleed is added. Use this to remove a thin coloured border or outline on the card image so the bleed mirrors the actual card background instead of the border colour. |
 | Page margin | 5 mm | Margin around the card grid on each page |
 | Image quality | 95 | JPEG quality of embedded card images (1–95). Lower = smaller PDF, higher = sharper. |
 | Cut marks — Fronts / Backs | on | Draw cross-shaped cut marks at each card corner on front and/or back pages |
@@ -101,7 +102,7 @@ Click **Process & Download PDF**. The app will:
 
 1. Normalise card orientation (handles landscape or portrait uploads)
 2. Resize images to the specified card dimensions (if needed)
-3. Add bleed to every card (front and back)
+3. Trim the outer edge (if pre-bleed trim > 0), then add bleed to every card (front and back)
 4. Calculate how many cards fit on each output page, automatically rotating the grid 90° if it fits more cards
 5. Arrange cards in a grid on front pages
 6. Mirror the arrangement on back pages for duplex alignment
