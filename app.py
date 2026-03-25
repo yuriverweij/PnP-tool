@@ -10,7 +10,7 @@ from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from PIL import Image, ImageOps
 
-from processing.bleed import add_bleed
+from processing.bleed import add_bleed, trim_card
 from processing.pdf_writer import PAGE_SIZES_MM, assemble_pdf, compute_grid
 
 logging.basicConfig(level=logging.INFO)
@@ -66,7 +66,7 @@ def _resize_to_card(img: Image.Image, card_w_px: int, card_h_px: int) -> Image.I
 
 
 def _ensure_rgb(img: Image.Image) -> Image.Image:
-    if img.mode not in ("RGB", "RGBA"):
+    if img.mode != "RGB":
         img = img.convert("RGB")
     return img
 
@@ -164,6 +164,7 @@ def process(
     cut_marks_backs: bool = Form(default=False),
     cut_mark_length_mm: float = Form(3.0),
     cut_mark_thickness_mm: float = Form(0.2),
+    trim_mm: float = Form(0.0),
 ):
     """Process front (and optional back) card images into a bleed-extended PDF."""
     # --- Validate parameters ---
@@ -198,7 +199,10 @@ def process(
                 status_code=422,
                 detail=f"Cannot open front image '{f.filename}': {exc}",
             ) from exc
-        front_images.append(_resize_to_card(img, card_w_px, card_h_px))
+        img = _resize_to_card(img, card_w_px, card_h_px)
+        if trim_mm > 0:
+            img = trim_card(img, trim_mm, DPI)
+        front_images.append(img)
 
     # --- Load default back ---
     default_back_img: Image.Image | None = None
@@ -208,6 +212,8 @@ def process(
             default_back_img = _ensure_rgb(_open_image(data))
             default_back_img = _normalize_orientation(default_back_img, card_w_px, card_h_px)
             default_back_img = _resize_to_card(default_back_img, card_w_px, card_h_px)
+            if trim_mm > 0:
+                default_back_img = trim_card(default_back_img, trim_mm, DPI)
         except Exception as exc:
             raise HTTPException(
                 status_code=422, detail=f"Cannot open default back image: {exc}"
@@ -234,7 +240,10 @@ def process(
             try:
                 img = _ensure_rgb(_open_image(data))
                 img = _normalize_orientation(img, card_w_px, card_h_px)
-                back_images.append(_resize_to_card(img, card_w_px, card_h_px))
+                img = _resize_to_card(img, card_w_px, card_h_px)
+                if trim_mm > 0:
+                    img = trim_card(img, trim_mm, DPI)
+                back_images.append(img)
             except Exception as exc:
                 raise HTTPException(
                     status_code=422,
@@ -257,7 +266,10 @@ def process(
                     img_bytes = base64.b64decode(overrides[key])
                     img = _ensure_rgb(_open_image(img_bytes))
                     img = _normalize_orientation(img, card_w_px, card_h_px)
-                    back_images.append(_resize_to_card(img, card_w_px, card_h_px))
+                    img = _resize_to_card(img, card_w_px, card_h_px)
+                    if trim_mm > 0:
+                        img = trim_card(img, trim_mm, DPI)
+                    back_images.append(img)
                 except Exception as exc:
                     raise HTTPException(
                         status_code=422,
